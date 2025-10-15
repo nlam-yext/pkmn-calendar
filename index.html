@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokémon Republican Calendar</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 600px;
+            width: 100%;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+        
+        input[type="date"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="date"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .convert-btn {
+            background: #667eea;
+            color: white;
+        }
+        
+        .convert-btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .random-btn {
+            background: #f093fb;
+            color: white;
+        }
+        
+        .random-btn:hover {
+            background: #e081ea;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(240, 147, 251, 0.4);
+        }
+        
+        .result {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            padding: 30px;
+            color: white;
+            text-align: center;
+            display: none;
+        }
+        
+        .result.show {
+            display: block;
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .poke-date {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        .tm-info {
+            font-size: 1.3em;
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+        }
+        
+        .standard-date {
+            font-size: 0.9em;
+            margin-top: 15px;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚡ Pokémon Republican Calendar ⚡</h1>
+        <p class="subtitle">Inspired by the French Republican Calendar</p>
+        
+        <div class="input-group">
+            <label for="dateInput">Select a Date:</label>
+            <input type="date" id="dateInput">
+        </div>
+        
+        <div class="button-group">
+            <button class="convert-btn" onclick="convertDate()">Convert Date</button>
+            <button class="random-btn" onclick="randomDate()">Random Date</button>
+        </div>
+        
+        <div class="result" id="result">
+            <div class="poke-date" id="pokeDate"></div>
+            <div class="tm-info" id="tmInfo"></div>
+            <div class="standard-date" id="standardDate"></div>
+        </div>
+    </div>
+
+    <script>
+        const regions = [
+            'Kanto', 'Johto', 'Hoenn', 'Sinnoh', 
+            'Unova', 'Kalos', 'Alola', 'Galar',
+            'Paldea', 'Orre', 'Fiore', 'Almia'
+        ];
+        
+        const regionalPokemon = {
+            'Kanto': [
+                {en: 'Pidgey', fr: 'Roucool'}, {en: 'Rattata', fr: 'Rattata'}, {en: 'Pikachu', fr: 'Pikachu'}, 
+                {en: 'Bulbasaur', fr: 'Bulbizarre'}, {en: 'Charmander', fr: 'Salamèche'}, {en: 'Squirtle', fr: 'Carapuce'},
+                {en: 'Caterpie', fr: 'Chenipan'}, {en: 'Weedle', fr: 'Aspicot'}, {en: 'Spearow', fr: 'Piafabec'},
+                {en: 'Ekans', fr: 'Abo'}, {en: 'Sandshrew', fr: 'Sabelette'}, {en: 'Nidoran', fr: 'Nidoran'},
+                {en: 'Clefairy', fr: 'Mélofée'}, {en: 'Vulpix', fr: 'Goupix'}, {en: 'Jigglypuff', fr: 'Rondoudou'},
+                {en: 'Zubat', fr: 'Nosferapti'}, {en: 'Oddish', fr: 'Mystherbe'}, {en: 'Paras', fr: 'Paras'},
+                {en: 'Venonat', fr: 'Mimitoss'}, {en: 'Diglett', fr: 'Taupiqueur'}, {en: 'Meowth', fr: 'Miaouss'},
+                {en: 'Psyduck', fr: 'Psykokwak'}, {en: 'Mankey', fr: 'Férosinge'}, {en: 'Growlithe', fr: 'Caninos'},
+                {en: 'Poliwag', fr: 'Ptitard'}, {en: 'Abra', fr: 'Abra'}, {en: 'Machop', fr: 'Machoc'},
+                {en: 'Bellsprout', fr: 'Chétiflor'}, {en: 'Tentacool', fr: 'Tentacool'}, {en: 'Geodude', fr: 'Racaillou'},
+                {en: 'Ponyta', fr: 'Ponyta'}
+            ],
+            'Johto': [
+                {en: 'Sentret', fr: 'Fouinette'}, {en: 'Hoothoot', fr: 'Hoothoot'}, {en: 'Ledyba', fr: 'Coxy'},
+                {en: 'Spinarak', fr: 'Mimigal'}, {en: 'Chikorita', fr: 'Germignon'}, {en: 'Cyndaquil', fr: 'Héricendre'},
+                {en: 'Totodile', fr: 'Kaiminus'}, {en: 'Pichu', fr: 'Pichu'}, {en: 'Cleffa', fr: 'Mélo'},
+                {en: 'Igglybuff', fr: 'Toudoudou'}, {en: 'Togepi', fr: 'Togepi'}, {en: 'Natu', fr: 'Natu'},
+                {en: 'Mareep', fr: 'Wattouat'}, {en: 'Marill', fr: 'Marill'}, {en: 'Sudowoodo', fr: 'Simularbre'},
+                {en: 'Hoppip', fr: 'Granivol'}, {en: 'Aipom', fr: 'Capumain'}, {en: 'Sunkern', fr: 'Tournegrin'},
+                {en: 'Yanma', fr: 'Yanma'}, {en: 'Wooper', fr: 'Axoloto'}, {en: 'Murkrow', fr: 'Cornèbre'},
+                {en: 'Misdreavus', fr: 'Feuforêve'}, {en: 'Girafarig', fr: 'Girafarig'}, {en: 'Pineco', fr: 'Pomdepik'},
+                {en: 'Dunsparce', fr: 'Insolourdo'}, {en: 'Snubbull', fr: 'Snubbull'}, {en: 'Teddiursa', fr: 'Teddiursa'},
+                {en: 'Slugma', fr: 'Limagma'}, {en: 'Swinub', fr: 'Marcacrin'}, {en: 'Houndour', fr: 'Malosse'},
+                {en: 'Phanpy', fr: 'Phanpy'}
+            ],
+            'Hoenn': [
+                {en: 'Poochyena', fr: 'Medhyèna'}, {en: 'Zigzagoon', fr: 'Zigzaton'}, {en: 'Wurmple', fr: 'Chenipotte'},
+                {en: 'Lotad', fr: 'Nénupiot'}, {en: 'Seedot', fr: 'Grainipiot'}, {en: 'Taillow', fr: 'Nirondelle'},
+                {en: 'Wingull', fr: 'Goélise'}, {en: 'Ralts', fr: 'Tarsal'}, {en: 'Shroomish', fr: 'Balignon'},
+                {en: 'Slakoth', fr: 'Parecool'}, {en: 'Nincada', fr: 'Ningale'}, {en: 'Whismur', fr: 'Chuchmur'},
+                {en: 'Makuhita', fr: 'Makuhita'}, {en: 'Azurill', fr: 'Azurill'}, {en: 'Skitty', fr: 'Skitty'},
+                {en: 'Sableye', fr: 'Ténéfix'}, {en: 'Mawile', fr: 'Mysdibule'}, {en: 'Aron', fr: 'Galekid'},
+                {en: 'Electrike', fr: 'Dynavolt'}, {en: 'Gulpin', fr: 'Gloupti'}, {en: 'Carvanha', fr: 'Carvanha'},
+                {en: 'Wailmer', fr: 'Wailmer'}, {en: 'Numel', fr: 'Chamallot'}, {en: 'Torkoal', fr: 'Chartor'},
+                {en: 'Spoink', fr: 'Spoink'}, {en: 'Trapinch', fr: 'Kraknoix'}, {en: 'Cacnea', fr: 'Cacnea'},
+                {en: 'Swablu', fr: 'Tylton'}, {en: 'Barboach', fr: 'Barloche'}, {en: 'Corphish', fr: 'Écrapince'},
+                {en: 'Shuppet', fr: 'Polichombr'}
+            ],
+            'Sinnoh': [
+                {en: 'Starly', fr: 'Étourmi'}, {en: 'Bidoof', fr: 'Keunotor'}, {en: 'Kricketot', fr: 'Crikzik'},
+                {en: 'Shinx', fr: 'Lixy'}, {en: 'Budew', fr: 'Rozbouton'}, {en: 'Cranidos', fr: 'Kranidos'},
+                {en: 'Shieldon', fr: 'Dinoclier'}, {en: 'Burmy', fr: 'Cheniti'}, {en: 'Combee', fr: 'Apitrini'},
+                {en: 'Pachirisu', fr: 'Pachirisu'}, {en: 'Buizel', fr: 'Mustébouée'}, {en: 'Cherubi', fr: 'Ceribou'},
+                {en: 'Shellos', fr: 'Sancoki'}, {en: 'Drifloon', fr: 'Baudrive'}, {en: 'Buneary', fr: 'Laporeille'},
+                {en: 'Glameow', fr: 'Chaglam'}, {en: 'Chingling', fr: 'Korillon'}, {en: 'Stunky', fr: 'Moufouette'},
+                {en: 'Bronzor', fr: 'Archéomire'}, {en: 'Chatot', fr: 'Pijako'}, {en: 'Spiritomb', fr: 'Spiritomb'},
+                {en: 'Gible', fr: 'Griknot'}, {en: 'Riolu', fr: 'Riolu'}, {en: 'Hippopotas', fr: 'Hippopotas'},
+                {en: 'Skorupi', fr: 'Rapion'}, {en: 'Croagunk', fr: 'Cradopaud'}, {en: 'Finneon', fr: 'Écayon'},
+                {en: 'Snover', fr: 'Blizzi'}, {en: 'Rotom', fr: 'Motisma'}, {en: 'Uxie', fr: 'Créhelf'},
+                {en: 'Mesprit', fr: 'Créfollet'}
+            ],
+            'Unova': [
+                {en: 'Patrat', fr: 'Ratentif'}, {en: 'Lillipup', fr: 'Ponchiot'}, {en: 'Purrloin', fr: 'Chacripan'},
+                {en: 'Pansage', fr: 'Feuillajou'}, {en: 'Pansear', fr: 'Flamajou'}, {en: 'Panpour', fr: 'Flotajou'},
+                {en: 'Munna', fr: 'Munna'}, {en: 'Pidove', fr: 'Poichigeon'}, {en: 'Blitzle', fr: 'Zébibron'},
+                {en: 'Roggenrola', fr: 'Nodulithe'}, {en: 'Woobat', fr: 'Chovsourir'}, {en: 'Drilbur', fr: 'Rototaupe'},
+                {en: 'Audino', fr: 'Nanméouïe'}, {en: 'Timburr', fr: 'Charpenti'}, {en: 'Tympole', fr: 'Tritonde'},
+                {en: 'Throh', fr: 'Judokrak'}, {en: 'Sawk', fr: 'Karaclée'}, {en: 'Sewaddle', fr: 'Larveyette'},
+                {en: 'Venipede', fr: 'Venipatte'}, {en: 'Cottonee', fr: 'Doudouvet'}, {en: 'Petilil', fr: 'Chlorobule'},
+                {en: 'Sandile', fr: 'Mascaïman'}, {en: 'Darumaka', fr: 'Darumarond'}, {en: 'Maractus', fr: 'Maracachi'},
+                {en: 'Dwebble', fr: 'Crabicoque'}, {en: 'Scraggy', fr: 'Baggiguane'}, {en: 'Sigilyph', fr: 'Cryptéro'},
+                {en: 'Yamask', fr: 'Tutafeh'}, {en: 'Tirtouga', fr: 'Carapagos'}, {en: 'Archen', fr: 'Arkéapti'},
+                {en: 'Trubbish', fr: 'Miamiasme'}
+            ],
+            'Kalos': [
+                {en: 'Bunnelby', fr: 'Sapereau'}, {en: 'Fletchling', fr: 'Passerouge'}, {en: 'Scatterbug', fr: 'Lépidonille'},
+                {en: 'Litleo', fr: 'Hélionceau'}, {en: 'Flabébé', fr: 'Flabébé'}, {en: 'Skiddo', fr: 'Cabriolaine'},
+                {en: 'Pancham', fr: 'Pandespiègle'}, {en: 'Furfrou', fr: 'Couafarel'}, {en: 'Espurr', fr: 'Psystigri'},
+                {en: 'Honedge', fr: 'Monorpale'}, {en: 'Spritzee', fr: 'Fluvetin'}, {en: 'Swirlix', fr: 'Sucroquin'},
+                {en: 'Inkay', fr: 'Sepiatop'}, {en: 'Binacle', fr: 'Opermine'}, {en: 'Skrelp', fr: 'Venalgue'},
+                {en: 'Clauncher', fr: 'Flingouste'}, {en: 'Helioptile', fr: 'Galvaran'}, {en: 'Tyrunt', fr: 'Ptyranidur'},
+                {en: 'Amaura', fr: 'Amagara'}, {en: 'Hawlucha', fr: 'Brutalibré'}, {en: 'Dedenne', fr: 'Dedenne'},
+                {en: 'Carbink', fr: 'Strassie'}, {en: 'Goomy', fr: 'Mucuscule'}, {en: 'Klefki', fr: 'Trousselin'},
+                {en: 'Phantump', fr: 'Brocélôme'}, {en: 'Pumpkaboo', fr: 'Pitrouille'}, {en: 'Bergmite', fr: 'Grelaçon'},
+                {en: 'Noibat', fr: 'Sonistrelle'}, {en: 'Chespin', fr: 'Marisson'}, {en: 'Fennekin', fr: 'Feunnec'},
+                {en: 'Froakie', fr: 'Grenousse'}
+            ],
+            'Alola': [
+                {en: 'Pikipek', fr: 'Picassaut'}, {en: 'Yungoos', fr: 'Manglouton'}, {en: 'Grubbin', fr: 'Larvibule'},
+                {en: 'Crabrawler', fr: 'Crabagarre'}, {en: 'Oricorio', fr: 'Plumeline'}, {en: 'Cutiefly', fr: 'Bombydou'},
+                {en: 'Rockruff', fr: 'Rocabot'}, {en: 'Wishiwashi', fr: 'Froussardine'}, {en: 'Mareanie', fr: 'Vorastérie'},
+                {en: 'Mudbray', fr: 'Tiboudet'}, {en: 'Dewpider', fr: 'Araqua'}, {en: 'Fomantis', fr: 'Mimantis'},
+                {en: 'Morelull', fr: 'Spododo'}, {en: 'Salandit', fr: 'Tritox'}, {en: 'Stufful', fr: 'Nounourson'},
+                {en: 'Bounsweet', fr: 'Croquine'}, {en: 'Comfey', fr: 'Guérilande'}, {en: 'Oranguru', fr: 'Gouroutan'},
+                {en: 'Passimian', fr: 'Quartermac'}, {en: 'Wimpod', fr: 'Sovkipou'}, {en: 'Sandygast', fr: 'Bacabouh'},
+                {en: 'Pyukumuku', fr: 'Concombaffe'}, {en: 'Togedemaru', fr: 'Togedemaru'}, {en: 'Mimikyu', fr: 'Mimiqui'},
+                {en: 'Bruxish', fr: 'Denticrisse'}, {en: 'Drampa', fr: 'Draïeul'}, {en: 'Dhelmise', fr: 'Sinistrail'},
+                {en: 'Jangmo-o', fr: 'Bébécaille'}, {en: 'Rowlet', fr: 'Brindibou'}, {en: 'Litten', fr: 'Flamiaou'},
+                {en: 'Popplio', fr: 'Otaquin'}
+            ],
+            'Galar': [
+                {en: 'Skwovet', fr: 'Rongourmand'}, {en: 'Rookidee', fr: 'Minisange'}, {en: 'Blipbug', fr: 'Larvadar'},
+                {en: 'Nickit', fr: 'Goupilou'}, {en: 'Gossifleur', fr: 'Tournicoton'}, {en: 'Wooloo', fr: 'Moumouton'},
+                {en: 'Chewtle', fr: 'Khélocrok'}, {en: 'Yamper', fr: 'Voltoutou'}, {en: 'Rolycoly', fr: 'Charbi'},
+                {en: 'Applin', fr: 'Verpom'}, {en: 'Silicobra', fr: 'Dunaja'}, {en: 'Cramorant', fr: 'Nigosier'},
+                {en: 'Arrokuda', fr: 'Embrochet'}, {en: 'Toxel', fr: 'Toxizap'}, {en: 'Sizzlipede', fr: 'Grillepattes'},
+                {en: 'Clobbopus', fr: 'Poulpaf'}, {en: 'Sinistea', fr: 'Théffroi'}, {en: 'Hatenna', fr: 'Bibichut'},
+                {en: 'Impidimp', fr: 'Grimalin'}, {en: 'Milcery', fr: 'Crèmy'}, {en: 'Falinks', fr: 'Hexadron'},
+                {en: 'Pincurchin', fr: 'Wattapik'}, {en: 'Snom', fr: 'Frissonille'}, {en: 'Stonjourner', fr: 'Dolman'},
+                {en: 'Eiscue', fr: 'Bekaglaçon'}, {en: 'Indeedee', fr: 'Wimessir'}, {en: 'Morpeko', fr: 'Morpeko'},
+                {en: 'Cufant', fr: 'Charibari'}, {en: 'Grookey', fr: 'Ouistempo'}, {en: 'Scorbunny', fr: 'Flambino'},
+                {en: 'Sobble', fr: 'Larméléon'}
+            ],
+            'Paldea': [
+                {en: 'Lechonk', fr: 'Gourmelet'}, {en: 'Tarountula', fr: 'Tissenboule'}, {en: 'Nymble', fr: 'Lilliterelle'},
+                {en: 'Pawmi', fr: 'Pohm'}, {en: 'Tandemaus', fr: 'Compagnol'}, {en: 'Fidough', fr: 'Pâtachiot'},
+                {en: 'Smoliv', fr: 'Olivini'}, {en: 'Squawkabilly', fr: 'Tapatoès'}, {en: 'Nacli', fr: 'Selutin'},
+                {en: 'Charcadet', fr: 'Charbambin'}, {en: 'Tadbulb', fr: 'Têtampoule'}, {en: 'Wattrel', fr: 'Zapétrel'},
+                {en: 'Maschiff', fr: 'Grondogue'}, {en: 'Shroodle', fr: 'Gribouraigne'}, {en: 'Bramblin', fr: 'Virevorreur'}
+            ],
+            'Orre': [
+                {en: 'Espeon', fr: 'Mentali'}, {en: 'Umbreon', fr: 'Noctali'}, {en: 'Makuhita', fr: 'Makuhita'},
+                {en: 'Bayleef', fr: 'Macronium'}, {en: 'Quilava', fr: 'Feurisson'}, {en: 'Croconaw', fr: 'Crocrodil'}
+            ],
+            'Fiore': [
+                {en: 'Plusle', fr: 'Posipi'}, {en: 'Minun', fr: 'Négapi'}, {en: 'Pichu', fr: 'Pichu'},
+                {en: 'Mudkip', fr: 'Gobou'}, {en: 'Torchic', fr: 'Poussifeu'}, {en: 'Treecko', fr: 'Arcko'}
+            ],
+            'Almia': [
+                {en: 'Pachirisu', fr: 'Pachirisu'}, {en: 'Munchlax', fr: 'Goinfrex'}, {en: 'Starly', fr: 'Étourmi'},
+                {en: 'Shieldon', fr: 'Dinoclier'}, {en: 'Cranidos', fr: 'Kranidos'}, {en: 'Riolu', fr: 'Riolu'}
+            ]
+        };
+        
+        const tms = [
+            'TM01 Focus Punch', 'TM02 Dragon Claw', 'TM03 Water Pulse', 'TM04 Calm Mind',
+            'TM05 Roar', 'TM06 Toxic', 'TM07 Hail', 'TM08 Bulk Up',
+            'TM09 Bullet Seed', 'TM10 Hidden Power', 'TM11 Sunny Day', 'TM12 Taunt',
+            'TM13 Ice Beam', 'TM14 Blizzard', 'TM15 Hyper Beam', 'TM16 Light Screen',
+            'TM17 Protect', 'TM18 Rain Dance', 'TM19 Giga Drain', 'TM20 Safeguard',
+            'TM21 Frustration', 'TM22 Solar Beam', 'TM23 Iron Tail', 'TM24 Thunderbolt',
+            'TM25 Thunder', 'TM26 Earthquake', 'TM27 Return', 'TM28 Dig',
+            'TM29 Psychic', 'TM30 Shadow Ball', 'HM01 Cut', 'HM02 Fly',
+            'HM03 Surf', 'HM04 Strength', 'HM05 Flash', 'HM06 Rock Smash',
+            'HM07 Waterfall', 'HM08 Dive', 'TM31 Brick Break', 'TM32 Double Team',
+            'TM33 Reflect', 'TM34 Shock Wave', 'TM35 Flamethrower', 'TM36 Sludge Bomb',
+            'TM37 Sandstorm', 'TM38 Fire Blast', 'TM39 Rock Tomb', 'TM40 Aerial Ace',
+            'TM41 Torment', 'TM42 Facade', 'TM43 Secret Power', 'TM44 Rest',
+            'TM45 Attract', 'TM46 Thief', 'TM47 Steel Wing', 'TM48 Skill Swap',
+            'TM49 Snatch', 'TM50 Overheat'
+        ];
+        
+        const POKEMON_EPOCH = new Date('1996-02-27');
+        
+        function setTodayDate() {
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            document.getElementById('dateInput').value = `${yyyy}-${mm}-${dd}`;
+        }
+        
+        function toRoman(num) {
+            const romanNumerals = [
+                ['M', 1000], ['CM', 900], ['D', 500], ['CD', 400],
+                ['C', 100], ['XC', 90], ['L', 50], ['XL', 40],
+                ['X', 10], ['IX', 9], ['V', 5], ['IV', 4], ['I', 1]
+            ];
+            let result = '';
+            for (let [roman, value] of romanNumerals) {
+                while (num >= value) {
+                    result += roman;
+                    num -= value;
+                }
+            }
+            return result;
+        }
+        
+        function convertDate() {
+            const dateInput = document.getElementById('dateInput').value;
+            if (!dateInput) {
+                alert('Please select a date first!');
+                return;
+            }
+            
+            const selectedDate = new Date(dateInput);
+            displayPokemonDate(selectedDate);
+        }
+        
+        function randomDate() {
+            const start = POKEMON_EPOCH.getTime();
+            const end = new Date().getTime();
+            const randomTime = start + Math.random() * (end - start);
+            const randomDate = new Date(randomTime);
+            
+            const yyyy = randomDate.getFullYear();
+            const mm = String(randomDate.getMonth() + 1).padStart(2, '0');
+            const dd = String(randomDate.getDate()).padStart(2, '0');
+            document.getElementById('dateInput').value = `${yyyy}-${mm}-${dd}`;
+            
+            displayPokemonDate(randomDate);
+        }
+        
+        function displayPokemonDate(date) {
+            const dayOfYear = Math.floor((date - new Date(date.getFullYear(), 0, 0)) / 86400000);
+            const month = Math.floor(dayOfYear / 30.4167) % regions.length; // Use modulo to wrap around
+            const day = Math.floor(dayOfYear % 30.4167) + 1;
+            
+            const regionIndex = month;
+            const region = regions[regionIndex];
+            
+            const yearsSinceEpoch = date.getFullYear() - POKEMON_EPOCH.getFullYear();
+            const romanYear = toRoman(Math.max(1, yearsSinceEpoch));
+            
+            const tmIndex = (dayOfYear - 1) % tms.length;
+            const tm = tms[tmIndex];
+            
+            const pokemonList = regionalPokemon[region];
+            const pokemonIndex = (day - 1) % pokemonList.length;
+            const pokemon = pokemonList[pokemonIndex];
+            
+            document.getElementById('pokeDate').textContent = 
+                `Today is ${pokemon.fr} (${pokemon.en})`;
+            document.getElementById('tmInfo').textContent = 
+                `${day} ${tm} ${region} ${romanYear}`;
+            document.getElementById('standardDate').textContent = 
+                `Standard Date: ${date.toLocaleDateString('en-US', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                })}`;
+            
+            document.getElementById('result').classList.add('show');
+        }
+        
+        setTodayDate();
+    </script>
+</body>
+</html>
